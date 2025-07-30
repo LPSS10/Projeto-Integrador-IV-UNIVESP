@@ -6,6 +6,8 @@ Arthur Brantes de Lima,
 
 Bruna Karina Pacheco,
 
+Christian Monteiro dos Santos Pereira,
+
 Jefferson Alves Correia Lima,
 
 Luciano Gonçalves dos Santos,
