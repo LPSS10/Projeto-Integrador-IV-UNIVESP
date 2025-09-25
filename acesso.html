@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Consumo de Energia Residencial</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <div class="max-w-6xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6 text-center">📊 Monitoramento de Consumo de Energia Residencial</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Gráfico -->
+      <div class="bg-white rounded-2xl shadow-md p-4">
+        <h2 class="text-xl font-semibold mb-4">Consumo ao Longo do Tempo</h2>
+        <canvas id="energiaChart"></canvas>
+      </div>
+
+      <!-- Valores Atuais -->
+      <div class="bg-white rounded-2xl shadow-md p-4">
+        <h2 class="text-xl font-semibold mb-4">Resumo Atual</h2>
+        <ul class="space-y-2 text-lg" id="parametros"></ul>
+        <div id="alerta" class="mt-4 text-red-600 font-bold"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function gerarDados() {
+      // Labels como se fossem horas do dia
+      const labels = Array.from({ length: 12 }, (_, i) => `${i + 8}h`);
+
+      // Simulando consumo (kWh) entre 0.5 e 2.8
+      const consumo = labels.map(() => (Math.random() * 2.3 + 0.5).toFixed(2)); 
+      const custo = consumo.map(v => (v * 0.95).toFixed(2)); // tarifa fictícia R$ 0,95/kWh
+      const pico = Math.max(...consumo);
+
+      return { labels, consumo, custo, pico };
+    }
+
+    function atualizarDashboard() {
+      const { labels, consumo, custo, pico } = gerarDados();
+
+      const ctx = document.getElementById('energiaChart').getContext('2d');
+      if (window.chartInstance) window.chartInstance.destroy();
+      window.chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Consumo (kWh)',
+              data: consumo,
+              borderColor: '#4ade80',
+              backgroundColor: '#bbf7d0',
+              fill: true,
+            },
+            {
+              label: 'Custo (R$)',
+              data: custo,
+              borderColor: '#60a5fa',
+              backgroundColor: '#dbeafe',
+              fill: true,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'top' } }
+        }
+      });
+
+      // Calcular médias
+      const consumoMedio = consumo.reduce((a, b) => a + parseFloat(b), 0) / consumo.length;
+      const custoMedio = consumoMedio * 0.95;
+
+      // Previsão mensal (simulando 30 dias, 24h por dia)
+      const consumoPrevisto = (consumoMedio * 24 * 30).toFixed(2);
+      const custoPrevisto = (consumoPrevisto * 0.95).toFixed(2);
+
+      // Atualizar lista
+      const parametros = document.getElementById('parametros');
+      parametros.innerHTML = `
+        <li><strong>Último Consumo:</strong> ${consumo.at(-1)} kWh</li>
+        <li><strong>Custo Estimado (hora):</strong> R$ ${custo.at(-1)}</li>
+        <li><strong>Pico de Consumo:</strong> ${pico.toFixed(2)} kWh</li>
+        <li><strong>Consumo Médio:</strong> ${consumoMedio.toFixed(2)} kWh</li>
+        <li><strong>Previsão Mensal:</strong> ${consumoPrevisto} kWh</li>
+        <li><strong>Gasto Mensal Estimado:</strong> R$ ${custoPrevisto}</li>
+      `;
+
+      // Alerta de alto consumo
+      const alerta = document.getElementById('alerta');
+      if (parseFloat(consumo.at(-1)) > 2.2) {
+        alerta.textContent = "⚠️ Alerta: Consumo muito alto detectado!";
+      } else {
+        alerta.textContent = "";
+      }
+    }
+
+    atualizarDashboard();
+    setInterval(atualizarDashboard, 10000);
+  </script>
+</body>
+</html>
